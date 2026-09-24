@@ -11,18 +11,22 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-  console.log('用户接入：', socket.id);
+  console.log('用户连接:', socket.id);
 
   socket.on('chat message', (data) => {
-    io.emit('chat message', data);
+    const payload = {
+      nick: data.nick || '匿名用户',
+      msg: data.msg || ''
+    };
+    io.emit('chat message', payload);
   });
 
   socket.on('disconnect', () => {
-    console.log('用户下线：', socket.id);
+    console.log('用户断开:', socket.id);
   });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log("聊天室启动成功");
+  console.log('聊天室已启动，端口:', PORT);
 });
