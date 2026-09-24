@@ -1,188 +1,97 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>聊天室</title>
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        margin: 0;
-        font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
-        background: linear-gradient(135deg, #f0f4ff, #e8fff4);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-      }
-
-      .chat-box {
-        width: 90%;
-        max-width: 700px;
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 16px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-        overflow: hidden;
-      }
-
-      .chat-header {
-        padding: 18px 20px;
-        background: #4f46e5;
-        color: white;
-        font-size: 20px;
-        font-weight: bold;
-      }
-
-      .chat-messages {
-        height: 420px;
-        overflow-y: auto;
-        padding: 18px 20px;
-        background: #f9fafb;
-      }
-
-      .message {
-        margin-bottom: 14px;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .message.self {
-        align-items: flex-end;
-      }
-
-      .message-content {
-        max-width: 75%;
-        padding: 10px 14px;
-        border-radius: 12px;
-        line-height: 1.5;
-        word-break: break-word;
-      }
-
-      .message.self .message-content {
-        background: #4f46e5;
-        color: white;
-      }
-
-      .message.other .message-content {
-        background: #e5e7eb;
-        color: #111827;
-      }
-
-      .sender {
-        font-size: 12px;
-        color: #6b7280;
-        margin-bottom: 4px;
-      }
-
-      .message.self .sender {
-        text-align: right;
-      }
-
-      .chat-input {
-        display: flex;
-        gap: 10px;
-        padding: 16px 20px;
-        background: white;
-        border-top: 1px solid #e5e7eb;
-      }
-
-      #messageInput {
-        flex: 1;
-        padding: 12px 14px;
-        border: 1px solid #d1d5db;
-        border-radius: 10px;
-        font-size: 16px;
-        outline: none;
-      }
-
-      #messageInput:focus {
-        border-color: #4f46e5;
-        box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
-      }
-
-      button {
-        border: none;
-        background: #4f46e5;
-        color: white;
-        padding: 12px 18px;
-        border-radius: 10px;
-        font-size: 16px;
-        cursor: pointer;
-      }
-
-      button:hover {
-        background: #4338ca;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="chat-box">
-      <div class="chat-header">在线聊天室</div>
-      <div class="chat-messages" id="messages"></div>
-      <div class="chat-input">
-        <input id="messageInput" type="text" placeholder="输入消息并按回车发送..." maxlength="200" />
-        <button id="sendBtn">发送</button>
-      </div>
-    </div>
-
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多人实时聊天室</title>
     <script src="/socket.io/socket.io.js"></script>
-    <script>
-      const socket = io();
-      const messagesEl = document.getElementById('messages');
-      const inputEl = document.getElementById('messageInput');
-      const sendBtn = document.getElementById('sendBtn');
-
-      function appendMessage(text, sender, isSelf = false) {
-        const wrap = document.createElement('div');
-        wrap.className = `message ${isSelf ? 'self' : 'other'}`;
-
-        const senderEl = document.createElement('div');
-        senderEl.className = 'sender';
-        senderEl.textContent = sender;
-
-        const contentEl = document.createElement('div');
-        contentEl.className = 'message-content';
-        contentEl.textContent = text;
-
-        wrap.appendChild(senderEl);
-        wrap.appendChild(contentEl);
-        messagesEl.appendChild(wrap);
-        messagesEl.scrollTop = messagesEl.scrollHeight;
-      }
-
-      function sendMessage() {
-        const text = inputEl.value.trim();
-        if (!text) return;
-
-        const payload = {
-          sender: '我',
-          text
-        };
-
-        socket.emit('chat message', payload);
-        appendMessage(text, '我', true);
-        inputEl.value = '';
-        inputEl.focus();
-      }
-
-      sendBtn.addEventListener('click', sendMessage);
-
-      inputEl.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') {
-          sendMessage();
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+        body{background:#f0f2f5;display:flex;justify-content:center;padding:20px}
+        .chat-box{width:100%;max-width:460px;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #ddd}
+        .chat-header{background:#2486ff;color:#fff;padding:16px;text-align:center;font-weight:bold;font-size:18px}
+        .chat-content{height:520px;padding:16px;overflow-y:auto;background:#fafafa}
+        .msg{margin-bottom:14px;display:flex}
+        .msg.other{justify-content:flex-start}
+        .msg.me{justify-content:flex-end}
+        .bubble{padding:10px 15px;border-radius:18px;max-width:75%;word-wrap:break-word;font-size:15px}
+        .other .bubble{background:#e5e7eb;color:#111}
+        .me .bubble{background:#2486ff;color:#fff}
+        .input-area{display:flex;padding:14px;border-top:1px solid #eee}
+        #msg-input{flex:1;padding:11px;border:1px solid #ddd;border-radius:24px;outline:none;font-size:15px}
+        #send-btn{margin-left:10px;padding:0 20px;background:#2486ff;color:#fff;border:none;border-radius:24px;cursor:pointer;font-size:15px}
+        .nick-popup{
+            position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);
+            display:flex;align-items:center;justify-content:center;
         }
-      });
+        .nick-box{background:white;padding:30px;border-radius:12px;text-align:center}
+        #nickname{padding:10px;width:240px;font-size:16px;border:1px solid #ccc;border-radius:8px}
+        #confirmNick{margin-top:14px;padding:9px 22px;background:#2486ff;color:white;border:none;border-radius:8px;cursor:pointer}
+    </style>
+</head>
+<body>
+<div class="nick-popup" id="nickPopup">
+    <div class="nick-box">
+        <h3>请输入你的昵称</h3>
+        <br>
+        <input id="nickname" placeholder="例如：阿明">
+        <br>
+        <button id="confirmNick">进入聊天室</button>
+    </div>
+</div>
 
-      socket.on('chat message', (data) => {
-        const senderName = data.sender || '系统';
-        const text = data.text || '';
-        appendMessage(text, senderName, senderName === '我');
-      });
+<div class="chat-box" id="chatContainer" style="display:none;">
+    <div class="chat-header">多人实时聊天室</div>
+    <div class="chat-content" id="chatWrap"></div>
+    <div class="input-area">
+        <input type="text" id="msg-input" placeholder="输入消息，回车发送">
+        <button id="send-btn">发送</button>
+    </div>
+</div>
 
-      appendMessage('欢迎来到聊天室！', '系统', false);
-    </script>
-  </body>
+<script>
+const socket = io();
+const chatWrap = document.getElementById('chatWrap');
+const input = document.getElementById('msg-input');
+const sendBtn = document.getElementById('send-btn');
+const nickPopup = document.getElementById('nickPopup');
+const chatContainer = document.getElementById('chatContainer');
+
+let myNickName = "";
+
+document.getElementById("confirmNick").onclick = function(){
+    const nick = document.getElementById("nickname").value.trim();
+    if(!nick){
+        alert("昵称不能为空！");
+        return;
+    }
+    myNickName = nick;
+    nickPopup.style.display = "none";
+    chatContainer.style.display = "block";
+}
+
+function addMsg(nick, text, isMine) {
+    const div = document.createElement('div');
+    div.className = `msg ${isMine ? 'me' : 'other'}`;
+    div.innerHTML = `<div class="bubble"><b>${nick}</b>：${text}</div>`;
+    chatWrap.appendChild(div);
+    chatWrap.scrollTop = chatWrap.scrollHeight;
+}
+
+function sendMessage(){
+    const txt = input.value.trim();
+    if(!txt) return;
+    addMsg(myNickName,txt,true);
+    socket.emit('chat message', {nick:myNickName,msg:txt});
+    input.value = "";
+}
+
+socket.on('chat message', (data)=>{
+    addMsg(data.nick, data.msg, false);
+})
+
+sendBtn.onclick = sendMessage;
+input.onkeydown = e=>{if(e.key==="Enter") sendMessage()}
+</script>
+</body>
 </html>
