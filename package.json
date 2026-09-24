@@ -1,13 +1,11 @@
 {
-  "name": "meyou",
+  "name": "socket-chat",
   "version": "1.0.0",
-  "description": "Realtime chat app",
-  "main": "index.js",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  },
   "scripts": {
     "start": "node index.js"
-  },
-  "dependencies": {
-    "express": "^4.21.2",
-    "socket.io": "^4.8.1"
   }
 }
